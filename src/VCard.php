@@ -886,13 +886,16 @@ class VCard
         }
 
         // Convert to special characters.
-+       $value = html_entity_decode($value, ENT_QUOTES);
+        $value = html_entity_decode($value, ENT_QUOTES);
 
-        // trim unneeded values
-        $value = trim($value, $separator);
+        // Trim unneeded values.
+		$value = trim($value, $separator);
 
-        // remove all spaces
-        $value = preg_replace('/\s+/', $separator, $value);
+        // Remove special characters.
+        $value = str_replace('/[^A-Za-z0-9\-]/', $separator, $value);
+
+        // Remove all spaces.
+		$value = preg_replace('/\s+/', $separator, $value);
 
         // if value is empty, stop here
         if (empty($value)) {
