@@ -217,6 +217,29 @@ class VCard
     }
 
     /**
+     * Add full name
+     *
+     * @param  string $fullname The person's full name.
+     * @return $this
+     */
+    public function addFullName($full_name)
+    {
+       if (!empty($full_name)) {
+            // is property FN set?
+            if (!$this->hasProperty('FN' . $this->getCharsetString())) {
+                // set property
+                $this->setProperty(
+                    'fullname',
+                    'FN' . $this->getCharsetString(),
+                    $full_name
+                );
+            } 
+        }
+
+       return $this;
+    }
+
+    /**
      * Add a photo or logo (depending on property name)
      *
      * @param string $property LOGO|PHOTO
@@ -229,7 +252,19 @@ class VCard
     {
         $mimeType = null;
 
-        //Is this URL for a remote resource?
+        // avoid SSL verification locally
+        if ( 'local' === wp_get_environment_type() ) {
+			stream_context_set_default(
+				array(
+					'ssl' => array(
+						'verify_peer'      => false,
+						'verify_peer_name' => false,
+					),
+				)
+			);
+		}
+
+        // is this URL for a remote resource?
         if (filter_var($url, FILTER_VALIDATE_URL) !== false) {
             $headers = get_headers($url, 1);
 
@@ -354,8 +389,7 @@ class VCard
             $property
         );
 
-        // is property FN set?
-        if (!$this->hasProperty('FN')) {
+        if (!$this->hasProperty('FN' . $this->getCharsetString())) {
             // set property
             $this->setProperty(
                 'fullname',
@@ -848,7 +882,7 @@ class VCard
     {
         $file = $this->getFilename() . '.' . $this->getFileExtension();
 
-        // Add save path if given
+        // add save path if given
         if (null !== $this->savePath) {
             $file = $this->savePath . $file;
         }
@@ -885,16 +919,16 @@ class VCard
             $value = implode($separator, $value);
         }
 
-        // Convert to special characters.
+        // convert to special characters.
         $value = html_entity_decode($value, ENT_QUOTES);
 
-        // Trim unneeded values.
+        // trim unneeded values.
 		$value = trim($value, $separator);
 
-        // Remove special characters.
+        // remove special characters.
         $value = str_replace('/[^A-Za-z0-9\-]/', $separator, $value);
 
-        // Remove all spaces.
+        // remove all spaces.
 		$value = preg_replace('/\s+/', $separator, $value);
 
         // if value is empty, stop here
@@ -925,7 +959,7 @@ class VCard
             throw VCardException::outputDirectoryNotExists();
         }
 
-        // Add trailing directory separator the save path
+        // add trailing directory separator the save path
         if (substr($savePath, -1) != DIRECTORY_SEPARATOR) {
             $savePath .= DIRECTORY_SEPARATOR;
         }
